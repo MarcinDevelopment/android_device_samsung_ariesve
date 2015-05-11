@@ -126,11 +126,11 @@
     <string name="config_datause_iface">pdp0</string>
 
     <!-- Timeout in MS for how long you have to long-press the back key to
-         kill the foreground app. -->
-    <integer name="config_backKillTimeout">1500</integer>
+         kill the foreground app.
+    <integer name="config_backKillTimeout">1500</integer> -->
 
-    <!-- Is the device LTE capable -->
-    <bool name="config_lte_capable">false</bool>
+    <!-- Is the device LTE capable
+    <bool name="config_lte_capable">false</bool> -->
 
     <!-- Boolean to enable stk functionality on Samsung phones -->
     <bool name="config_samsung_stk">true</bool>
@@ -149,8 +149,8 @@
             32 - Camera
             64 - Volume rocker
          For example, a device with Home, Back and Menu keys would set this
-         config to 7. -->
-    <integer name="config_deviceHardwareKeys">71</integer>
+         config to 7.
+    <integer name="config_deviceHardwareKeys">71</integer> -->
 
     <!-- Hardware keys present on the device with the ability to wake, stored as a bit field.
          This integer should equal the sum of the corresponding value for each
@@ -163,11 +163,11 @@
             32 - Camera
             64 - Volume rocker
          For example, a device with Home, Back and Menu keys would set this
-         config to 7. -->
-    <integer name="config_deviceHardwareWakeKeys">65</integer>
+         config to 7.
+    <integer name="config_deviceHardwareWakeKeys">65</integer> -->
 
-    <!-- Default, comma-delimited, quick settings tiles. See QSConstants.java for a list of all available tiles -->
-    <string name="config_defaultQuickSettingsTiles">wifi,bt,cell,airplane,rotation,location</string>
+    <!-- Default, comma-delimited, quick settings tiles. See QSConstants.java for a list of all available tiles
+    <string name="config_defaultQuickSettingsTiles">wifi,bt,cell,airplane,rotation,location</string> -->
 
     <!-- Enable lockscreen translucent decor -->
     <bool name="config_enableLockScreenTranslucentDecor">true</bool>
@@ -281,4 +281,12 @@
         <item>1</item>
         <item>1</item>
     </integer-array>
+
+    <!-- Control the behavior when the user long presses the home button.
+            0 - Nothing
+            1 - Recent apps view in SystemUI
+            2 - Launch assist intent
+         This needs to match the constants in
+         policy/src/com/android/internal/policy/impl/PhoneWindowManager.java -->
+    <integer name="config_longPressOnHomeBehavior">1</integer>
 </resources>

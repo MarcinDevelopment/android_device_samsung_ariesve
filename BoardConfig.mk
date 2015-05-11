@@ -1,4 +1,4 @@
-# Copyright (C) 2012 The CyanogenMod Project
+# Copyright 2015 The Android Open-Source Project
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ BOARD_USES_LEGACY_MMAP := true
 # Kernel
 BOARD_KERNEL_BASE := 0x00400000
 BOARD_KERNEL_PAGESIZE := 2048
-TARGET_KERNEL_SOURCE := kernel/samsung/msm7x30/
+TARGET_KERNEL_SOURCE := kernel/samsung/msm7x30-common
 TARGET_KERNEL_CONFIG := ariesve_defconfig
 
 # Enable dex-preoptimization to speed up first boot sequence
