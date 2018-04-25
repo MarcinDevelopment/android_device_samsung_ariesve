@@ -1,43 +1,28 @@
-$(shell mkdir -p $(OUT)/obj/SHARED_LIBRARIES/libcamera_intermediates/)
-$(shell touch $(OUT)/obj/SHARED_LIBRARIES/libcamera_intermediates/export_includes)
-$(shell mkdir -p $(OUT)/obj/SHARED_LIBRARIES/libseccameraadaptor_intermediates/)
-$(shell touch $(OUT)/obj/SHARED_LIBRARIES/libseccameraadaptor_intermediates/export_includes)
-
 LOCAL_PATH:= $(call my-dir)
 
 include $(CLEAR_VARS)
 
-LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+LOCAL_MODULE_RELATIVE_PATH := hw
 LOCAL_MODULE := camera.$(TARGET_BOARD_PLATFORM)
+
+LOCAL_SRC_FILES := \
+    cameraHAL.cpp \
+    Overlay.cpp \
+    exif/exif.c \
+    exif/gpsinfo.c \
+    exif/iptc.c \
+    exif/jhead.c \
+    exif/jpgfile.c \
+    exif/makernote.c \
+
+LOCAL_C_INCLUDES := $(TOP)/frameworks/native/include
+
+LOCAL_C_INCLUDES += $(call project-path-for,qcom-display)/libgralloc \
+                    system/media/camera/include
 
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_SRC_FILES := cameraHAL.cpp \
-	exif/exif.c \
-	exif/gpsinfo.c \
-	exif/iptc.c \
-	exif/jhead.c \
-	exif/jpgfile.c \
-	exif/makernote.c
-                
-
-LOCAL_C_INCLUDES := frameworks/av/include
-LOCAL_C_INCLUDES += frameworks/native/include
-LOCAL_C_INCLUDES += system/media/camera/include
-LOCAL_C_INCLUDES += $(call project-path-for,qcom-display)/libgralloc
-
-LOCAL_SHARED_LIBRARIES := liblog libutils libcutils libbinder
-LOCAL_SHARED_LIBRARIES += libui libhardware libcamera_client
+LOCAL_SHARED_LIBRARIES := liblog libutils libhardware libcamera_client
 LOCAL_SHARED_LIBRARIES += libseccameraadaptor
-LOCAL_PRELINK_MODULE := false
-
-
-# hack for prebuilt
-$(shell mkdir -p $(OUT)/obj/SHARED_LIBRARIES/libcamera_intermediates/)
-$(shell touch $(OUT)/obj/SHARED_LIBRARIES/libcamera_intermediates/export_includes)
-$(shell mkdir -p $(OUT)/obj/SHARED_LIBRARIES/libseccameraadaptor_intermediates/)
-$(shell touch $(OUT)/obj/SHARED_LIBRARIES/libseccameraadaptor_intermediates/export_includes)
 
 include $(BUILD_SHARED_LIBRARY)
-
-

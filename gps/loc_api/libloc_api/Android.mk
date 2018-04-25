@@ -12,9 +12,7 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE_TAGS := optional
 
-LOCAL_MODULE := gps.$(BOARD_VENDOR_QCOM_GPS_LOC_API_HARDWARE)
-
-LOCAL_MODULE_TAGS := optional
+LOCAL_MODULE := gps.$(TARGET_BOARD_PLATFORM)
 
 LOCAL_STATIC_LIBRARIES:= \
     libloc_api-rpc 
@@ -33,17 +31,14 @@ LOCAL_SRC_FILES += \
     loc_eng_cfg.cpp \
     gps.c
 
-LOCAL_CFLAGS += \
-    -fno-short-enums \
-    -DAMSS_VERSION=$(BOARD_VENDOR_QCOM_GPS_LOC_API_AMSS_VERSION) \
-    -DLIBLOC_USE_GPS_PRIVACY_LOCK=1
+LOCAL_CFLAGS := -fno-short-enums
 
-LOCAL_C_INCLUDES:= \
+LOCAL_C_INCLUDES := \
     $(TARGET_OUT_HEADERS)/libloc_api-rpc \
     $(TARGET_OUT_HEADERS)/libloc_api-rpc/inc \
     $(TARGET_OUT_HEADERS)/libcommondefs-rpc/inc \
     $(TARGET_OUT_HEADERS)/librpc
 
-LOCAL_MODULE_PATH := $(TARGET_OUT_SHARED_LIBRARIES)/hw
+LOCAL_MODULE_RELATIVE_PATH := hw
 
 include $(BUILD_SHARED_LIBRARY)

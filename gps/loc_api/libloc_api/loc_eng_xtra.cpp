@@ -49,7 +49,7 @@
 // #undef LOGD
 // #define LOGD(...) {}
 
-#define LOC_XTRA_INJECT_DEFAULT_TIMEOUT (3100)
+#define LOC_XTRA_INJECT_DEFAULT_TIMEOUT (4650)
 #define XTRA_BLOCK_SIZE                 (1024)
 
 static int qct_loc_eng_xtra_init (GpsXtraCallbacks* callbacks);

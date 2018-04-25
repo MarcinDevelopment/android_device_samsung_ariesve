@@ -27,7 +27,7 @@
 #include <linux/input.h>
 
 #include "SensorBase.h"
-
+#include <cstring> //Compilation FIX
 /*****************************************************************************/
 
 SensorBase::SensorBase(

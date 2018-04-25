@@ -1,3 +1,0 @@
-type sensors_socket, file_type;
-type camera_socket, file_type;
-type sysfs_custom, fs_type, sysfs_type;

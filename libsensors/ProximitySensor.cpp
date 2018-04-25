@@ -25,7 +25,7 @@
 #include <cutils/log.h>
 
 #include "ProximitySensor.h"
-
+#include <cstring> //Compilation FIX
 /*****************************************************************************/
 
 ProximitySensor::ProximitySensor()

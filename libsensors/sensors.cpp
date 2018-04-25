@@ -38,7 +38,7 @@
 #include "Bma222Sensor.h"
 #include "CompassSensor.h"
 #include "OrientationSensor.h"
-
+#include <cstring> //Compilation FIX
 /*****************************************************************************/
 
 #define SENSORS_ACCELERATION     (1<<ID_A)

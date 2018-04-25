@@ -1,3 +1,0 @@
-allow untrusted_app sysfs_custom:dir search;
-allow untrusted_app sysfs_custom:file rw_file_perms;
-allow untrusted_app sysfs_custom:lnk_file read;

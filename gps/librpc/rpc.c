@@ -1,4 +1,5 @@
 #include <rpc/rpc.h>
+#include <stdio.h>
 
 /*
  * Functions to compose RPC messages from XDR primitives
@@ -121,8 +122,6 @@ bool_t xdr_send_reply_header(
 
     return TRUE;
 } /* xdr_send_reply_header */
-
-#include <stdio.h>
 
 bool_t
 xdr_send_auth(xdr_s_type *xdr, const opaque_auth *auth)

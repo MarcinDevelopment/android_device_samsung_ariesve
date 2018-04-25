@@ -190,8 +190,6 @@ SVCXPRT *svcrtr_create (void)
             pthread_attr_setdetachstate(&xprt->thread_attr,
                                         PTHREAD_CREATE_DETACHED);
             pthread_mutexattr_init(&xprt->lock_attr);
-//          pthread_mutexattr_settype(&xprt->lock_attr,
-//                                    PTHREAD_MUTEX_RECURSIVE);
             pthread_mutex_init(&xprt->lock, &xprt->lock_attr);
         }
     }    

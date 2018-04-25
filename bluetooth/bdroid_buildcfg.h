@@ -23,5 +23,9 @@
 #define BTA_BLE_SKIP_CONN_UPD TRUE
 // Disables read remote device feature
 #define BTA_SKIP_BLE_READ_REMOTE_FEAT TRUE
+#define BLE_INCLUDED FALSE
+#define BTA_GATT_INCLUDED FALSE
+#define SMP_INCLUDED FALSE
+#define REMOVE_EAGER_THREADS FALSE
 
 #endif

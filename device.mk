@@ -19,8 +19,6 @@ DEVICE_PACKAGE_OVERLAYS += $(LOCAL_PATH)/overlay
 PRODUCT_AAPT_CONFIG := normal hdpi
 PRODUCT_AAPT_PREF_CONFIG := hdpi
 
-PRODUCT_BOOT_JARS += qcmediaplayer
-
 # Boot animation
 TARGET_SCREEN_HEIGHT := 800
 TARGET_SCREEN_WIDTH := 480
@@ -50,6 +48,7 @@ PRODUCT_COPY_FILES += \
     frameworks/av/media/libstagefright/data/media_codecs_google_video.xml:system/etc/media_codecs_google_video.xml \
     $(LOCAL_PATH)/config/media_codecs.xml:system/etc/media_codecs.xml \
     $(LOCAL_PATH)/config/media_profiles.xml:system/etc/media_profiles.xml \
+    $(LOCAL_PATH)/config/media_codecs_performance.xml:system/etc/media_codecs_performance.xml \
     $(LOCAL_PATH)/config/audio_policy.conf:system/etc/audio_policy.conf
 
 # Ramdisk
@@ -73,6 +72,10 @@ PRODUCT_COPY_FILES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/config/quantom-touchscreen.idc:system/usr/idc/quantom-touchscreen.idc
 
+# GPS config
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/gps/etc/gps.conf:system/etc/gps.conf
+
 # Keychars and keylayout
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/keyfiles/7k_handset.kl:system/usr/keylayout/7k_handset.kl \
@@ -81,26 +84,23 @@ PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/keyfiles/sec_jack.kl:system/usr/keylayout/sec_jack.kl \
     $(LOCAL_PATH)/keyfiles/melfas_touchkey.kl:system/usr/keylayout/melfas_touchkey.kl
 
-# GPS config
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/gps/etc/gps.conf:system/etc/gps.conf
-
 # Build packages
 PRODUCT_PACKAGES += \
-    camera.msm7x30 \
     copybit.msm7x30 \
     gralloc.msm7x30 \
     libgenlock \
     hwcomposer.msm7x30 \
     memtrack.msm7x30 \
-    gps.msm7x30 \
     lights.msm7x30 \
+    gps.msm7x30 \
     power.msm7x30 \
     audio.primary.msm7x30 \
     audio.a2dp.default \
     audio.usb.default \
     libaudio-resampler \
-    libaudioparameter
+    camera.msm7x30 \
+    libaudioparameter \
+    libstlport
 
 PRODUCT_PACKAGES += \
     libmm-omxcore \
@@ -108,35 +108,24 @@ PRODUCT_PACKAGES += \
     libOmxVenc \
     libOmxVdec \
     libstagefrighthw \
-    libc2dcolorconvert \
-    libdashplayer
+    libc2dcolorconvert
 
 # Filesystem management tools
 PRODUCT_PACKAGES += \
     badblocks \
-    e2fsck \
-    mke2fs \
     mke2fs.conf \
     resize2fs \
-    tune2fs \
-    make_ext4fs \
-    setup_fs
+    make_ext4fs
 
 # Usb accessory and Wifi
 PRODUCT_PACKAGES += \
     fsck.f2fs \
     mkfs.f2fs
 
-PRODUCT_PACKAGES += \
-    com.android.future.usb.accessory
-
 # Device-specific packages
 PRODUCT_PACKAGES += \
     sensors.ariesve \
-    AriesParts
-
-# qcmediaplayer
-PRODUCT_PACKAGES += qcmediaplayer
+    TerminalEmulator
 
 # IPv6 tethering
 PRODUCT_PACKAGES += \
@@ -168,8 +157,8 @@ ADDITIONAL_DEFAULT_PROPERTIES += \
 
 # For applications to determine if they should turn off specific memory-intensive
 # features that work poorly on low-memory devices.
-PRODUCT_PROPERTY_OVERRIDES += \
-    ro.config.low_ram=true
+#PRODUCT_PROPERTY_OVERRIDES += \
+#    ro.config.low_ram=true
 
 # ART
 PRODUCT_PROPERTY_OVERRIDES += \

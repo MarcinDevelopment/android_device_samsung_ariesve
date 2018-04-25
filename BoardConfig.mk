@@ -27,7 +27,7 @@
 # Vendor stuff
 -include vendor/samsung/ariesve/BoardConfigVendor.mk
 
-TARGET_SPECIFIC_HEADER_PATH := device/samsung/ariesve/include
+TARGET_SPECIFIC_HEADER_PATH += device/samsung/ariesve/include
 
 # Platform
 TARGET_BOOTLOADER_BOARD_NAME := ariesve
@@ -56,13 +56,7 @@ TARGET_KERNEL_SOURCE := kernel/samsung/msm7x30-common
 TARGET_KERNEL_CONFIG := ariesve_defconfig
 
 # Enable dex-preoptimization to speed up first boot sequence
-ifeq ($(HOST_OS),linux)
-  ifeq ($(TARGET_BUILD_VARIANT),userdebug)
-   ifeq ($(WITH_DEXPREOPT),)
-    WITH_DEXPREOPT := true
-   endif
-  endif
-endif
+WITH_DEXPREOPT := true
 
 # WiFi
 BOARD_HAVE_SAMSUNG_WIFI          := true
@@ -87,17 +81,22 @@ BOARD_HAVE_BLUETOOTH_BCM := true
 BOARD_BLUETOOTH_BDROID_BUILDCFG_INCLUDE_DIR := device/samsung/ariesve/bluetooth
 BOARD_BLUEDROID_VENDOR_CONF := device/samsung/ariesve/bluetooth/vnd_ariesve.txt
 
-# RIL
+# rmt_storage & rild
+TARGET_ENABLE_NON_PIE_SUPPORT := true
 TARGET_NEEDS_NON_PIE_SUPPORT := true
+TARGET_NEEDS_BIONIC_PRELINK_SUPPORT := true
+
+# RIL
 BOARD_MOBILEDATA_INTERFACE_NAME = "pdp0"
 BOARD_USES_LEGACY_RIL := true
 BOARD_RIL_CLASS := ../../../device/samsung/ariesve/ril/
 
 # GPS
-TARGET_GPS_HAL_PATH := device/samsung/ariesve/gps
-BOARD_USES_QCOM_GPS := true
-BOARD_VENDOR_QCOM_GPS_LOC_API_HARDWARE := msm7x30
-BOARD_VENDOR_QCOM_GPS_LOC_API_AMSS_VERSION := 50000
+#TARGET_GPS_HAL_PATH := device/samsung/ariesve/gps
+#BOARD_USES_QCOM_GPS := true
+#BOARD_VENDOR_QCOM_GPS_LOC_API_HARDWARE := msm7x30
+#BOARD_VENDOR_QCOM_GPS_LOC_API_AMSS_VERSION := 50000
+USE_DEVICE_SPECIFIC_GPS := true
 
 # Graphics
 TARGET_USES_C2D_COMPOSITION := true
@@ -112,33 +111,30 @@ BOARD_NEEDS_MEMORYHEAPPMEM := true
 COMMON_GLOBAL_CFLAGS += -DBINDER_COMPAT
 BOARD_USES_QCOM_HARDWARE := true
 BOARD_VENDOR_QCOM_AMSS_VERSION := 6225
-TARGET_USE_QCOM_BIONIC_OPTIMIZATION := true
-
-# Power HAL
-TARGET_PROVIDES_POWERHAL := true
 
 # Lights HAL
 TARGET_PROVIDES_LIBLIGHT := true
 
 # healthd HAL
-BOARD_HAL_STATIC_LIBRARIES := libhealthd.qcom
+# BOARD_HAL_STATIC_LIBRARIES := libhealthd.qcom
 
 # Camera
-COMMON_GLOBAL_CFLAGS += -DSAMSUNG_CAMERA_LEGACY
-TARGET_RELEASE_CPPFLAGS += -DNEEDS_VECTORIMPL_SYMBOLS
 USE_DEVICE_SPECIFIC_CAMERA := true
-BOARD_USES_LEGACY_OVERLAY := true
+COMMON_GLOBAL_CFLAGS += -DBINDER_COMPAT
+TARGET_RELEASE_CPPFLAGS += -DNEEDS_VECTORIMPL_SYMBOLS
 
 # Audio
-COMMON_GLOBAL_CFLAGS += -DQCOM_ENHANCED_AUDIO
-BOARD_HAVE_SAMSUNG_AUDIO := true
 BOARD_USES_LEGACY_ALSA_AUDIO := true
+BOARD_HAVE_SAMSUNG_AUDIO := true
 AUDIO_FEATURE_ENABLED_INCALL_MUSIC := false
 AUDIO_FEATURE_ENABLED_COMPRESS_VOIP := false
 AUDIO_FEATURE_ENABLED_PROXY_DEVICE := false
 
 # Include an expanded selection of fonts
 EXTENDED_FONT_FOOTPRINT := true
+
+# Triple FrameBuffer
+NUM_FRAMEBUFFER_SURFACE_BUFFERS := 3
 
 # Partitions
 BOARD_BOOTIMAGE_PARTITION_SIZE := 5242880
@@ -181,42 +177,6 @@ TW_HAS_DOWNLOAD_MODE := true
 TW_USE_MODEL_HARDWARE_ID_FOR_DEVICE_ID := true
 TW_INCLUDE_FB2PNG := true
 TARGET_RECOVERY_PIXEL_FORMAT := "RGBX_8888"
-
-# SELinux
-BOARD_SEPOLICY_DIRS += \
-    device/samsung/ariesve/sepolicy
-
-BOARD_SEPOLICY_UNION += \
-    file_contexts \
-    genfs_contexts \
-    property_contexts \
-    bridge.te \
-    camera.te \
-    device.te \
-    dhcp.te \
-    domain.te \
-    file.te \
-    geomagneticd.te \
-    healthd.te \
-    init.te \
-    kernel.te \
-    mac_update.te \
-    mediaserver.te \
-    netd.te \
-    orientationd.te \
-    platform_app.te \
-    property.te \
-    rild.te \
-    rmt.te \
-    su.te \
-    surfaceflinger.te \
-    system_app.te \
-    system_server.te \
-    tee.te \
-    ueventd.te \
-    untrusted_app.te \
-    vold.te \
-    wpa_supplicant.te
 
 # Hardware tunables
 BOARD_HARDWARE_CLASS := device/samsung/ariesve/cmhw/

@@ -15,6 +15,9 @@
 /dev/kgsl-2d1             0666   root       root
 /dev/ion                  0664   system     system
 
+# rmt_storage permissions
+/dev/rmt_storage 	  0666   root       root
+
 # rfkill needs world writable/readable
 /dev/rfkill               0666   root       root
 

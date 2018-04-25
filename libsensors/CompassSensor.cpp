@@ -25,7 +25,7 @@
 
 
 #include "CompassSensor.h"
-
+#include <cstring> //Compilation FIX
 
 /*****************************************************************************/
 CompassSensor::CompassSensor()

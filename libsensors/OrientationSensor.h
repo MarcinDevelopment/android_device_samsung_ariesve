@@ -25,7 +25,7 @@
 #include "sensors.h"
 #include "SensorBase.h"
 #include "InputEventReader.h"
-
+#include <cstring> //Compilation FIX
 /*****************************************************************************/
 
 

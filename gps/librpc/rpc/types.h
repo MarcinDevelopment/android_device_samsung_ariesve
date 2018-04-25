@@ -72,6 +72,7 @@ extern "C" {
 #define RPC_MSG_VERSION    ((u_long) 2)
 
 #include <inttypes.h>
+#include <stdlib.h>
 #include <string.h>
 #include <pthread.h>
 

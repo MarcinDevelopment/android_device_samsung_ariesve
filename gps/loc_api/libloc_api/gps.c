@@ -28,7 +28,7 @@
  */
 
 #include <hardware/gps.h>
-
+#include <string.h>
 #include <stdlib.h>
 
 extern const GpsInterface* get_gps_interface();
@@ -41,7 +41,7 @@ const GpsInterface* gps__get_gps_interface(struct gps_device_t* dev)
 static int open_gps(const struct hw_module_t* module, char const* name,
         struct hw_device_t** device)
 {
-    struct gps_device_t *dev = malloc(sizeof(struct gps_device_t));
+    struct gps_device_t* dev = malloc(sizeof(struct gps_device_t));
 
     if(dev == NULL)
         return -1;
@@ -63,8 +63,8 @@ static struct hw_module_methods_t gps_module_methods = {
 
 struct hw_module_t HAL_MODULE_INFO_SYM = {
     .tag = HARDWARE_MODULE_TAG,
-    .version_major = 1,
-    .version_minor = 0,
+    .module_api_version = 1,
+    .hal_api_version = 0,
     .id = GPS_HARDWARE_MODULE_ID,
     .name = "loc_api GPS Module",
     .author = "Qualcomm USA, Inc.",

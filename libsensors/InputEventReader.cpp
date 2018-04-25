@@ -27,7 +27,7 @@
 #include <cutils/log.h>
 
 #include "InputEventReader.h"
-
+#include <cstring> //Compilation FIX
 /*****************************************************************************/
 
 struct input_event;

@@ -24,7 +24,7 @@
 #include <cutils/log.h>
 
 #include "Bma222Sensor.h"
-
+#include <cstring> //Compilation FIX
 /*****************************************************************************/
 
 Bma222Sensor::Bma222Sensor()
