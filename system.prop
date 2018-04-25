@@ -70,3 +70,6 @@ persist.sys.force_highendgfx=true
 dalvik.vm.checkjni=0
 dalvik.vm.checkjni=false
 dalvik.vm.check-dex-sum=false
+
+# Ril testing
+persist.rilfix=false

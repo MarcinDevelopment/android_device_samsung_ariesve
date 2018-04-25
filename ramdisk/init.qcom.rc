@@ -14,7 +14,9 @@ on init
 on early-boot
     # set RLIMIT_MEMLOCK to 64MB
     setrlimit 8 67108864 67108864
-
+    
+    # Increase swappiness for zram
+    write /proc/sys/vm/swappiness 80
 on boot
     # Bluetooth
     chown bluetooth bluetooth /proc/bluetooth/sleep/proto
