@@ -126,4 +126,3 @@ int32_t Overlay::getHeightStride() const {
 // ----------------------------------------------------------------------------
 
 }; // namespace android
-

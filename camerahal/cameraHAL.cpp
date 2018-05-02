@@ -59,7 +59,8 @@ static sp<CameraHardwareInterface> gCameraHals[MAX_CAMERAS_SUPPORTED];
 static unsigned int gCamerasOpen = 0;
 
 static int camera_device_open(const hw_module_t *module, const char *name,
-        hw_device_t **device);
+                              hw_device_t **device);
+static int camera_device_close(hw_device_t* device);
 static int camera_get_number_of_cameras(void);
 static int camera_get_camera_info(int camera_id, struct camera_info *info);
 
@@ -76,18 +77,18 @@ camera_module_t HAL_MODULE_INFO_SYM = {
         .name = "Samsung msm7x30 Camera Wrapper",
         .author = "Zhibin Wu",
         .methods = &camera_module_methods,
-        .dso = NULL, /* remove compilation warnings */
-        .reserved = {0}, /* remove compilation warnings */
+        .dso = NULL,
+        .reserved = {0},
     },
 
     .get_number_of_cameras = camera_get_number_of_cameras,
     .get_camera_info = camera_get_camera_info,
-    .set_callbacks = NULL, /* remove compilation warnings */
-    .get_vendor_tag_ops = NULL, /* remove compilation warnings */
-    .open_legacy = NULL, /* remove compilation warnings */
-    .set_torch_mode = NULL, /* remove compilation warnings */
-    .init = NULL, /* remove compilation warnings */
-    .reserved = {0}, /* remove compilation warnings */
+    .set_callbacks = NULL,
+    .get_vendor_tag_ops = NULL,
+    .open_legacy = NULL,
+    .set_torch_mode = NULL,
+    .init = NULL,
+    .reserved = {0},
 };
 
 typedef struct priv_camera_device {
@@ -101,7 +102,7 @@ typedef struct priv_camera_device {
     camera_data_timestamp_callback data_timestamp_callback;
     camera_request_memory request_memory;
     void *user;
-    int preview_started;
+    int mFixFocus;
     /* old world*/
     int preview_width;
     int preview_height;
@@ -153,24 +154,16 @@ static void wrap_set_fd_hook(void *data, int fd)
     dev = (priv_camera_device_t*) data;
 }
 
-//Dorregaray for zooming
 static void wrap_set_crop_hook(void *data,
         uint32_t x, uint32_t y, uint32_t w, uint32_t h)
 {
-    priv_camera_device_t *dev = NULL;
-    preview_stream_ops *window = NULL;
+    priv_camera_device_t* dev = NULL;
     ALOGV("%s+++: %p", __FUNCTION__,data);
 
     if (!data)
         return;
 
     dev = (priv_camera_device_t*) data;
-
-    window = dev->window;
-    if (window == 0)
-        return;
-
-    window->set_crop(window, x, y, w, h);
 }
 
 //QiSS ME for preview
@@ -192,7 +185,7 @@ static void wrap_queue_buffer_hook(void *data, void *buffer)
     if (window == 0)
         return;
 
-    heap =  gCameraHals[dev->cameraid]->getPreviewHeap();
+    heap = gCameraHals[dev->cameraid]->getPreviewHeap();
     if (heap == 0)
         return;
 
@@ -215,7 +208,6 @@ static void wrap_queue_buffer_hook(void *data, void *buffer)
     if (0 == dev->gralloc->lock(dev->gralloc, *buf_handle,
                                 GRALLOC_USAGE_HW_RENDER,
                                 0, 0, width, height, &vaddr)) {
-        // the code below assumes YUV, not RGB
         memcpy(vaddr, frame, width * height * 3 / 2);
         ALOGV("%s: copy frame to gralloc buffer", __FUNCTION__);
     } else {
@@ -255,17 +247,30 @@ static camera_memory_t *wrap_memory_data(priv_camera_device_t *dev,
     if (!dev->request_memory)
         return NULL;
 
+    if (dataPtr == NULL) {
+        ALOGE("%s: dataPtr is null", __FUNCTION__);
+        return NULL;
+    }
+
     heap = dataPtr->getMemory(&offset, &size);
+    if (heap == 0) {
+        ALOGE("%s: heap memory not found", __FUNCTION__);
+        return NULL;
+    }
+
     data = (void *)((char *)(heap->base()) + offset);
 
     ALOGV("%s: data: %p size: %i", __FUNCTION__, data, size);
     ALOGV(" offset: %lu", (unsigned long)offset);
 
     mem = dev->request_memory(-1, size, 1, dev->user);
-
-    ALOGV(" mem:%p,mem->data%p ",  mem,mem->data);
-
-    memcpy(mem->data, data, size);
+    if (mem) {
+        ALOGV(" mem:%p,mem->data%p ", mem, mem->data);
+        memcpy(mem->data, data, size);
+    } else {
+        ALOGE("%s: failed to acquire the requested memory (size: %i)", __FUNCTION__, size);
+        mem = NULL;
+    }
 
     ALOGV("%s---", __FUNCTION__);
 
@@ -312,11 +317,9 @@ static void wrap_data_callback(int32_t msg_type, const sp<IMemory>& dataPtr,
     }
 
     data = wrap_memory_data(dev, dataPtr);
-
-    if (dev->data_callback)
-        dev->data_callback(msg_type, data, 0, NULL, dev->user);
-
-    if (NULL != data) {
+    if (data) {
+        if (dev->data_callback)
+            dev->data_callback(msg_type, data, 0, NULL, dev->user);
         data->release(data);
     }
 
@@ -339,13 +342,10 @@ static void wrap_data_callback_timestamp(nsecs_t timestamp, int32_t msg_type,
     dev = (priv_camera_device_t*) user;
 
     data = wrap_memory_data(dev, dataPtr);
-
-    if (dev->data_timestamp_callback)
-        dev->data_timestamp_callback(timestamp,msg_type, data, 0, dev->user);
-
-    gCameraHals[dev->cameraid]->releaseRecordingFrame(dataPtr); //QiSS ME need release or record will stop
-
-    if (NULL != data) {
+    if (data) {
+        if (dev->data_timestamp_callback)
+            dev->data_timestamp_callback(timestamp,msg_type, data, 0, dev->user);
+        gCameraHals[dev->cameraid]->releaseRecordingFrame(dataPtr); // Need release or record will stop
         data->release(data);
     }
 
@@ -369,41 +369,47 @@ static void CameraHAL_FixupParams(android::CameraParameters &camParams, priv_cam
     }
 
     if (dev->cameraid == CAMERA_ID_FRONT) {
-        camParams.set(android::CameraParameters::KEY_SUPPORTED_EFFECTS, "");
-        camParams.set(android::CameraParameters::KEY_SUPPORTED_FLASH_MODES, "");
         camParams.set(android::CameraParameters::KEY_SUPPORTED_ISO_MODES, "");
-        camParams.set(android::CameraParameters::KEY_SUPPORTED_SCENE_MODES, "");
-        camParams.set(android::CameraParameters::KEY_SUPPORTED_WHITE_BALANCE, "");
-        camParams.set(android::CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES, "15");
-    }
+        camParams.set(android::CameraParameters::KEY_SUPPORTED_FOCUS_MODES,
+                  android::CameraParameters::FOCUS_MODE_INFINITY);
 
-    if (dev->cameraid == CAMERA_ID_BACK) {
+        camParams.set(android::CameraParameters::KEY_FOCUS_MODE,
+                  android::CameraParameters::FOCUS_MODE_INFINITY);
+
+        camParams.set(android::CameraParameters::KEY_SUPPORTED_SCENE_MODES, "");
+        camParams.set(android::CameraParameters::KEY_SUPPORTED_EFFECTS, "");
+    } else if (dev->cameraid == CAMERA_ID_BACK) {
         if (!camParams.get(android::CameraParameters::KEY_MAX_NUM_FOCUS_AREAS)) {
             camParams.set(android::CameraParameters::KEY_MAX_NUM_FOCUS_AREAS, 1);
         }
-        camParams.set(android::CameraParameters::KEY_SUPPORTED_FOCUS_MODES, "auto,macro");
-        camParams.set(android::CameraParameters::KEY_SUPPORTED_ISO_MODES, "auto,ISO50,ISO100,ISO200,ISO400");
 
-        camParams.set(android::CameraParameters::KEY_MAX_ZOOM, "8");
-        camParams.set(android::CameraParameters::KEY_ZOOM_RATIOS, "100,125,150,175,200,225,250,275,300");
-        camParams.set(android::CameraParameters::KEY_ZOOM_SUPPORTED, CameraParameters::TRUE);
+        camParams.set(android::CameraParameters::KEY_MAX_ZOOM, "12");
+        camParams.set(android::CameraParameters::KEY_ZOOM_RATIOS, "100,125,150,175,200,225,250,275,300,325,350,375,400");
+        camParams.set(android::CameraParameters::KEY_ZOOM_SUPPORTED, android::CameraParameters::TRUE);
 
-        camParams.set(android::CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES, "30");
+        camParams.set(android::CameraParameters::KEY_SUPPORTED_EFFECTS, "none,mono,negative,sepia");
+        camParams.set(android::CameraParameters::KEY_SUPPORTED_FOCUS_MODES, "auto,infinity,normal,macro,facedetect,touchaf");
     }
+
+    camParams.set(android::CameraParameters::KEY_SUPPORTED_PREVIEW_FRAME_RATES, "30,15,7");
 
     camParams.set(android::CameraParameters::KEY_MAX_EXPOSURE_COMPENSATION, 4);
     camParams.set(android::CameraParameters::KEY_MIN_EXPOSURE_COMPENSATION, -4);
     camParams.set(android::CameraParameters::KEY_EXPOSURE_COMPENSATION_STEP, 1);
+
+    camParams.set(android::CameraParameters::KEY_MAX_SATURATION, 10);
+    camParams.set(android::CameraParameters::KEY_MAX_CONTRAST, 10);
+    camParams.set(android::CameraParameters::KEY_MAX_SHARPNESS, 30);
 }
 
 static int camera_set_preview_window(struct camera_device *device,
-        struct preview_stream_ops *window)
+                        struct preview_stream_ops *window)
 {
     int min_bufs = -1;
-    int kBufferCount = 6;
+    int kBufferCount = 4;
     priv_camera_device_t *dev = NULL;
 
-    ALOGI("%s+++,device %p", __FUNCTION__, device);
+    ALOGI("%s+++,device %p", __FUNCTION__,device);
 
     if (!device)
         return -EINVAL;
@@ -583,10 +589,30 @@ static int camera_start_preview(struct camera_device *device)
 
     rv = gCameraHals[dev->cameraid]->startPreview();
 
-    ALOGI("%s--- rv %d", __FUNCTION__,rv);
+    if (dev->mFixFocus) {
+        if (dev->cameraid == CAMERA_ID_BACK) {
+            ALOGI("%s: Fix focus mode", __FUNCTION__);
 
-    if (!rv)
-        dev->preview_started = 1;
+            // We need to switch the focus mode once after switching from video at 720P or the camera won't work.
+            int rv_fm = -EINVAL;
+            CameraParameters camParams;
+            camParams = gCameraHals[dev->cameraid]->getParameters();
+            const char *prevFocusMode = camParams.get(android::CameraParameters::KEY_FOCUS_MODE);
+
+            camParams.set(android::CameraParameters::KEY_FOCUS_MODE, android::CameraParameters::FOCUS_MODE_MACRO);
+            rv_fm = gCameraHals[dev->cameraid]->setParameters(camParams);
+
+            camParams.set(android::CameraParameters::KEY_FOCUS_MODE, android::CameraParameters::FOCUS_MODE_INFINITY);
+            rv_fm = gCameraHals[dev->cameraid]->setParameters(camParams);
+
+            camParams.set(android::CameraParameters::KEY_FOCUS_MODE, prevFocusMode);
+            rv_fm = gCameraHals[dev->cameraid]->setParameters(camParams);
+
+            dev->mFixFocus = 0;
+        }
+    }
+
+    ALOGI("%s--- rv %d", __FUNCTION__,rv);
 
     return rv;
 }
@@ -601,7 +627,6 @@ static void camera_stop_preview(struct camera_device *device)
         return;
 
     dev = (priv_camera_device_t*) device;
-    dev->preview_started = 0;
 
     gCameraHals[dev->cameraid]->stopPreview();
     ALOGI("%s---", __FUNCTION__);
@@ -620,7 +645,23 @@ static int camera_preview_enabled(struct camera_device *device)
     dev = (priv_camera_device_t*) device;
 
     rv = gCameraHals[dev->cameraid]->previewEnabled();
-    return dev->preview_started;
+
+    ALOGI("%s--- rv %d", __FUNCTION__,rv);
+
+    return rv;
+}
+
+static int camera_store_meta_data_in_buffers(struct camera_device *device, int enable)
+{
+    int rv = -EINVAL;
+    priv_camera_device_t *dev = NULL;
+
+    ALOGI("%s+++: device %p", __FUNCTION__, device);
+
+    if (!device)
+        return rv;
+
+    dev = (priv_camera_device_t*) device;
 
     ALOGI("%s--- rv %d", __FUNCTION__,rv);
 
@@ -659,8 +700,7 @@ static void camera_stop_recording(struct camera_device *device)
 
     gCameraHals[dev->cameraid]->stopRecording();
 
-    //QiSS ME force start preview when recording stop
-    gCameraHals[dev->cameraid]->startPreview();
+    dev->mFixFocus = 1;
 
     ALOGI("%s---", __FUNCTION__);
 }
@@ -747,10 +787,6 @@ static int camera_take_picture(struct camera_device *device)
 
     rv = gCameraHals[dev->cameraid]->takePicture();
 
-    dev->preview_started = 0;
-
-    gCameraHals[dev->cameraid]->stopPreview();
-
     ALOGI("%s--- rv %d", __FUNCTION__,rv);
 
     return rv;
@@ -790,6 +826,24 @@ static int camera_set_parameters(struct camera_device *device, const char *param
 
     String8 params_str8(params);
     camParams.unflatten(params_str8);
+
+    // If the front camera is going to be used
+    if (dev->cameraid == CAMERA_ID_FRONT) {
+        // Get recording hint (set in video recordin only) and rotation
+        const char *recordingHint = camParams.get(android::CameraParameters::KEY_RECORDING_HINT);
+        int rotation = camParams.getInt(android::CameraParameters::KEY_ROTATION);
+
+        // If the current mode is not video recording and the rotation
+        // is a portrait rotation (eg. 90, 270, etc), add 180 degree to
+        // fix the rotation of the taken photo
+        if ((recordingHint == NULL ||
+             strcmp(recordingHint, android::CameraParameters::FALSE) == 0) &&
+            (rotation / 90) % 2 > 0) {
+            rotation = (rotation + 180) % 360;
+            camParams.set(android::CameraParameters::KEY_ROTATION, rotation);
+            ALOGI("%s: Rotation changed to %d", __FUNCTION__, rotation);
+        }
+    }
 
     rv = gCameraHals[dev->cameraid]->setParameters(camParams);
 
@@ -863,7 +917,6 @@ static void camera_release(struct camera_device *device)
         return;
 
     dev = (priv_camera_device_t*) device;
-    dev->preview_started = 0;
 
     gCameraHals[dev->cameraid]->release();
     ALOGI("%s---", __FUNCTION__);
@@ -884,7 +937,6 @@ static int camera_device_close(hw_device_t *device)
     dev = (priv_camera_device_t*) device;
 
     if (dev) {
-        dev->preview_started = 0;
         gCameraHals[dev->cameraid].clear();
         gCameraHals[dev->cameraid] = NULL;
         gCamerasOpen--;
@@ -988,6 +1040,7 @@ static int camera_device_open(const hw_module_t *module, const char *name,
         camera_ops->start_preview = camera_start_preview;
         camera_ops->stop_preview = camera_stop_preview;
         camera_ops->preview_enabled = camera_preview_enabled;
+        camera_ops->store_meta_data_in_buffers = camera_store_meta_data_in_buffers;
         camera_ops->start_recording = camera_start_recording;
         camera_ops->stop_recording = camera_stop_recording;
         camera_ops->recording_enabled = camera_recording_enabled;
@@ -1063,4 +1116,3 @@ static int camera_get_camera_info(int camera_id, struct camera_info *info)
 
     return rv;
 }
-

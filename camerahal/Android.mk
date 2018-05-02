@@ -7,13 +7,15 @@ LOCAL_MODULE := camera.$(TARGET_BOARD_PLATFORM)
 
 LOCAL_SRC_FILES := \
     cameraHAL.cpp \
-    Overlay.cpp \
+    Overlay.cpp
+
+LOCAL_SRC_FILES := \
     exif/exif.c \
     exif/gpsinfo.c \
     exif/iptc.c \
     exif/jhead.c \
     exif/jpgfile.c \
-    exif/makernote.c \
+    exif/makernote.c
 
 LOCAL_C_INCLUDES := $(TOP)/frameworks/native/include
 
